@@ -2,6 +2,7 @@
 #include "config.h"
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <EEPROM.h>
 
 // TODO: Move credentials to a more secure location
 String wifi_ssid, wifi_pass, mqtt_server, mqtt_port_str, device_id;
@@ -64,11 +65,48 @@ void onConnectionEstablished() {
     LOG_I("steering-wheel/acceleration -> %d\n", payload.toInt());
     _steering->setAcceleration(payload.toInt());
   });
+
+  client->subscribe("service/scan-i2c", [] (const String &payload)  {
+    LOG_I("I2C scan command received. Starting scan...\n");
+    JsonDocument doc;
+    JsonArray arr = doc.to<JsonArray>();
+
+    for (uint8_t addr = 0x03; addr <= 0x77; addr++) {
+      Wire.beginTransmission(addr);
+      if (Wire.endTransmission() == 0) {
+        char hexAddr[8];
+        sprintf(hexAddr, "0x%02X", addr);
+        arr.add(hexAddr);
+      }
+    }
+
+    String output;
+    serializeJson(doc, output);
+    client->publish("service/scan-i2c-result", output);
+    LOG_I("I2C scan completed. Found %d devices.\n", arr.size());
+  });
+
+  client->subscribe("service/start-portal", [] (const String &payload)  {
+    LOG_I("Start portal command received. Setting portal flag and restarting...\n");
+    Communication::requestPortal();
+
+    uint8_t portalFlag = 1;
+    EEPROM.put(EEPROM_PORTAL_FLAG_ADDRESS, portalFlag);
+    EEPROM.commit();
+
+    JsonDocument response;
+    response["status"] = "accepted";
+    response["message"] = "Portal will start after restart";
+    String output;
+    serializeJson(response, output);
+    client->publish("service/start-portal-result", output);
+  });
 }
 
 namespace Communication {
 
 bool _restart_requested = false;
+bool _portal_requested = false;
 
 void setup(MotorController* motorController, SensorManager* sensorManager, Steering* steering) {
     _motorController = motorController;
@@ -136,6 +174,18 @@ bool restartRequested() {
 
 void requestRestart() {
     _restart_requested = true;
+}
+
+bool portalRequested() {
+    if (_portal_requested) {
+        _portal_requested = false; // Reset the flag
+        return true;
+    }
+    return false;
+}
+
+void requestPortal() {
+    _portal_requested = true;
 }
 
 } // namespace Communication

@@ -8,26 +8,33 @@ SensorManager::SensorManager() :
     _mpu(),
     _sonarRight(SONAR_RIGHT_PING, SONAR_RIGHT_PING, MAX_DISTANCE),
     _sonarLeft(SONAR_LEFT_PING, SONAR_LEFT_PING, MAX_DISTANCE),
-    _ina226(INA226_ADDRESS)
+    _ina226(INA226_ADDRESS),
+    _mpuAddress(MPU_ADDRESS),
+    _ina226Address(INA226_ADDRESS)
 {
     _last_mpu_calculate = 0;
     _last_energy_time = 0;
     _energy = 0.0;
 }
 
-void SensorManager::begin(float shunt) {
+void SensorManager::begin(float shunt, uint8_t mpuAddr, uint8_t inaAddr) {
+    _mpuAddress = mpuAddr;
+    _ina226Address = inaAddr;
+
     Wire.begin(SW_I2C_SDA, SW_I2C_SCL);
 
     EEPROM.begin(512);
 
+    _mpu = MPU6050(_mpuAddress);
     _mpu.initialize();
     _mpu.dmpInitialize();
     _mpu.setDMPEnabled(true);
 
     readOffsetsMPU();
 
+    _ina226 = INA226(_ina226Address);
     if (!_ina226.begin()) {
-        LOG_E("INA226 not found at address 0x%X\n", INA226_ADDRESS);
+        LOG_E("INA226 not found at address 0x%X\n", _ina226Address);
     } else {
         _ina226.setMaxCurrentShunt(3.0, shunt);
         LOG_I("INA226 initialized with shunt %.2f Ohm.\n", shunt);

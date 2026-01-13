@@ -2,6 +2,7 @@
 #include "config.h"
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <EEPROM.h>
 
 #include "MotorController.h"
 #include "SensorManager.h"
@@ -18,26 +19,51 @@ void setup() {
 
    LOG_I("Wheel Bot Starting...\n");
 
-   // Load shunt resistance from config
-   float shunt_resistance = 0.1;
-   if (LittleFS.begin()) {
+   // Check portal flag in EEPROM
+   uint8_t portalFlag = 0;
+   EEPROM.begin(512);
+   EEPROM.get(EEPROM_PORTAL_FLAG_ADDRESS, portalFlag);
+   if (portalFlag == 1) {
+       LOG_I("Portal flag set. Clearing flag and starting portal...\n");
+       portalFlag = 0;
+       EEPROM.put(EEPROM_PORTAL_FLAG_ADDRESS, portalFlag);
+       EEPROM.end();
+
+       WiFiPortal portal("Wheelbot-Ctrl-Setup");
+       if (!portal.run()) {
+           LOG_E("Portal failed. Restarting...\n");
+           ESP.restart();
+       }
+       LOG_I("Portal completed. Restarting to apply settings...\n");
+       delay(1000);
+       ESP.restart();
+   }
+   EEPROM.end();
+
+    // Load I2C addresses and shunt resistance from config
+    float shunt_resistance = 0.1;
+    uint8_t mpu_address = 0x68;
+    uint8_t ina226_address = 0x40;
+    if (LittleFS.begin()) {
        File configFile = LittleFS.open("/config.json", "r");
        if (configFile) {
            DynamicJsonDocument doc(512);
-           deserializeJson(doc, configFile);
-           configFile.close();
-           shunt_resistance = doc["shunt_resistance"] | 0.1;
-       }
-   }
+            deserializeJson(doc, configFile);
+            configFile.close();
+            shunt_resistance = doc["shunt_resistance"] | 0.1;
+            mpu_address = (uint8_t)strtol(doc["mpu_address"] | "0x68", NULL, 0);
+            ina226_address = (uint8_t)strtol(doc["ina226_address"] | "0x40", NULL, 0);
+        }
+    }
 
-   motorController.begin();
+    motorController.begin();
    LOG_I("Motor Controller Initialized.\n");
 
-   steering.begin();
-   LOG_I("Steering Initialized.\n");
+    steering.begin();
+    LOG_I("Steering Initialized.\n");
 
-   sensorManager.begin(shunt_resistance);
-   LOG_I("Sensor Manager Initialized with shunt %.2f Ohm.\n", shunt_resistance);
+    sensorManager.begin(shunt_resistance, mpu_address, ina226_address);
+    LOG_I("Sensor Manager Initialized with shunt %.2f Ohm, MPU@0x%02X, INA226@0x%02X.\n", shunt_resistance, mpu_address, ina226_address);
 
   Communication::setup(&motorController, &sensorManager, &steering);
   LOG_I("Communication Initialized.\n");
@@ -51,11 +77,13 @@ void setup() {
             DynamicJsonDocument doc(512);
             deserializeJson(doc, configFile);
             configFile.close();
-            ssid = doc["ssid"] | "";
-            password = doc["password"] | "";
-            shunt_resistance = doc["shunt_resistance"] | 0.1;
-        }
-    }
+             ssid = doc["ssid"] | "";
+             password = doc["password"] | "";
+             shunt_resistance = doc["shunt_resistance"] | 0.1;
+             mpu_address = (uint8_t)strtol(doc["mpu_address"] | "0x68", NULL, 0);
+             ina226_address = (uint8_t)strtol(doc["ina226_address"] | "0x40", NULL, 0);
+         }
+     }
 
   if (ssid.length() == 0) {
     LOG_I("No WiFi settings found. Starting portal...\n");
@@ -168,6 +196,16 @@ void loop() {
   Communication::loop();
 
   if (Communication::restartRequested()) {
+    delay(1000);
+    ESP.restart();
+  }
+
+  if (Communication::portalRequested()) {
+    LOG_I("Portal requested via MQTT. Setting portal flag and restarting...\n");
+    uint8_t portalFlag = 1;
+    EEPROM.begin(512);
+    EEPROM.put(EEPROM_PORTAL_FLAG_ADDRESS, portalFlag);
+    EEPROM.end();
     delay(1000);
     ESP.restart();
   }

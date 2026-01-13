@@ -63,17 +63,20 @@
 #define MAX_DISTANCE 200  // Maximum distance to ping for (in cm)
 
 // -- MPU6050 Settings --
+// Note: MPU6050 I2C address is now configurable via captive portal. Default: 0x68
 #define MPU_ADDRESS 0x68
 #define MPU_CALIBRATION_BUFFER_SIZE 100
 #define MPU_METRIC_DEVIDER 32768
 #define MPU_MESUAREMENT_DELAY 100  // Delay between MPU measurements in ms (changed to common 100ms)
 
 // -- INA226 Settings --
-#define INA226_ADDRESS 0x40  // I2C address for INA226
+// Note: INA226 I2C address is now configurable via captive portal. Default: 0x40
+#define INA226_ADDRESS 0x40
 #define INA226_SHUNT_RESISTANCE 0.1  // Shunt resistance in ohms (example: 0.1 ohm for current up to 3.2A)
 
 // -- EEPROM Settings --
 #define EEPROM_START_ADDRESS 0x00
+#define EEPROM_PORTAL_FLAG_ADDRESS 100
 
 // -- Motor Controller Settings --
 #define MOTOR_UPDATE_INTERVAL 100 // Update motor speed every 100ms (changed to common)

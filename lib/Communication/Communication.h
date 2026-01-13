@@ -21,6 +21,8 @@ void publish(const char* topic, const String& payload);
 bool isConnected();
 bool restartRequested();
 void requestRestart();
+bool portalRequested();
+void requestPortal();
 
 } // namespace Communication
 

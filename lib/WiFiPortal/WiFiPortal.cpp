@@ -42,6 +42,17 @@ bool isValidPort(String port) {
     return portNum > 0 && portNum <= 65535;
 }
 
+bool isValidI2CAddress(String address) {
+    if (address.length() != 4) return false;
+    if (address.charAt(0) != '0' || (address.charAt(1) != 'x' && address.charAt(1) != 'X')) return false;
+    for (int i = 2; i < 4; i++) {
+        char c = address.charAt(i);
+        if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))) return false;
+    }
+    int addr = (int)strtol(address.c_str(), NULL, 0);
+    return addr >= 0x03 && addr <= 0x77;
+}
+
 WiFiPortal::WiFiPortal(const char* ap_ssid) : _server(80) {
     _ap_ssid = ap_ssid;
     _cachedTemplate = nullptr;
@@ -179,6 +190,8 @@ bool WiFiPortal::run() {
     WiFi.mode(WIFI_STA);
     LOG_I("Portal stopped.\n");
 
+    ESP.restart(); // Restart to apply new settings
+
     return true; // Should return true on success
 }
 
@@ -241,6 +254,8 @@ void WiFiPortal::handle_root() {
     String password = "";
     String ssid = "";
     String shunt_resistance = "0.1";
+    String mpu_address = "0x68";
+    String ina226_address = "0x40";
 
     File configFile = LittleFS.open("/config.json", "r");
     if (configFile) {
@@ -252,6 +267,8 @@ void WiFiPortal::handle_root() {
         password = doc["password"] | "";
         ssid = doc["ssid"] | "";
         shunt_resistance = String(doc["shunt_resistance"] | 0.1);
+        mpu_address = doc["mpu_address"] | "0x68";
+        ina226_address = doc["ina226_address"] | "0x40";
     }
 
     // Generate default device_id if empty
@@ -272,6 +289,8 @@ void WiFiPortal::handle_root() {
     portalContent.replace("{server_port_val}", server_port);
     portalContent.replace("{device_id_val}", device_id);
     portalContent.replace("{shunt_resistance_val}", shunt_resistance);
+    portalContent.replace("{mpu_address_val}", mpu_address);
+    portalContent.replace("{ina226_address_val}", ina226_address);
 
     LOG_I("Serving portal page.");
 
@@ -294,6 +313,8 @@ void WiFiPortal::handle_save() {
     String server_port = _server.arg("server_port");
     String device_id = _server.arg("device_id");
     String shunt_resistance_str = _server.arg("shunt_resistance");
+    String mpu_address_str = _server.arg("mpu_address");
+    String ina226_address_str = _server.arg("ina226_address");
 
     // Validate SSID
     if (ssid.length() == 0) {
@@ -355,6 +376,18 @@ void WiFiPortal::handle_save() {
         return;
     }
 
+    if (!isValidI2CAddress(mpu_address_str)) {
+        LOG_I("Error: Invalid MPU address");
+        send_error_page("Invalid MPU6050 I2C address. Please enter a valid hex address (e.g., 0x68) in range 0x03-0x77.");
+        return;
+    }
+
+    if (!isValidI2CAddress(ina226_address_str)) {
+        LOG_I("Error: Invalid INA226 address");
+        send_error_page("Invalid INA226 I2C address. Please enter a valid hex address (e.g., 0x40) in range 0x03-0x77.");
+        return;
+    }
+
     // Save to config file
     DynamicJsonDocument doc(512);
     doc["ssid"] = ssid;
@@ -363,6 +396,8 @@ void WiFiPortal::handle_save() {
     doc["server_port"] = server_port;
     doc["device_id"] = device_id;
     doc["shunt_resistance"] = shunt_resistance;
+    doc["mpu_address"] = mpu_address_str;
+    doc["ina226_address"] = ina226_address_str;
 
     File configFile = LittleFS.open("/config.json", "w");
     if (configFile) {
