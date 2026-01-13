@@ -1,9 +1,9 @@
 # WheelBot.org Controller Module
 
 ## Description
-The WheelBot Controller Module is a firmware project for a wheeled robot (wheelbot.org) based on the ESP8266 microcontroller. It is designed for autonomous or remote-controlled operation with sensor integration, motor and steering control, and MQTT telemetry. Ideal for hobby projects, education, or experiments with autonomous vehicles.
+The WheelBot Controller Module project is firmware for a  WheelBot based on the ESP8266 microcontroller. It is designed for autonomous or remote control of the robot via MQTT.
 
-The Wheelbot.org project is a $30 wheeled robot with an open architecture for exploring machine learning algorithms and autonomous systems.
+Wheelbot.org is a $30 wheeled robot with an open architecture for research into machine learning algorithms and autonomous systems.
 
 ### Features
 - **Sensor Suite**: Ultrasonic sensors (HC-SR04) for obstacle detection, IMU (MPU6050) for orientation and motion tracking, power monitoring (INA226).
