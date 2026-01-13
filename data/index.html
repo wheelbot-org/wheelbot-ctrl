@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wheelb⚙t - Ctrl Setup</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Wheelb⚙t.org</h1>
+        <h2>Controller Configurator</h2>
+        <hr>
+        <form action="/save" method="POST">
+            <label for="ssid">Wi-Fi Network (SSID)</label>
+
+            <div class="select-wrapper">
+                <div class="select-spinner" id="ssid-spinner"></div>
+
+                <select id="ssid" name="ssid" disabled current-data="{ssid_val}">
+                    <option>Scanning Wi-Fi networks...</option>
+                </select>
+            </div>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" value="{wifi-password}">
+
+            <hr>
+
+             <label for="server_ip">Server domain</label>
+             <input type="text" id="server" name="server" placeholder="e.g., dev.rightech.io" value="{server_ip_val}">
+
+             <label for="server_port">Server Port</label>
+             <input type="text" id="server_port" name="server_port" value="{server_port_val}">
+
+             <label for="device_id">Device ID</label>
+             <input type="text" id="device_id" name="device_id" value="{device_id_val}">
+
+             <label for="shunt_resistance">Shunt Resistance (Ohm)</label>
+             <input type="number" step="0.01" id="shunt_resistance" name="shunt_resistance" placeholder="0.1" value="{shunt_resistance_val}">
+
+             <button type="submit">Save & Connect</button>
+        </form>
+    </div>
+</body>
+</html>
