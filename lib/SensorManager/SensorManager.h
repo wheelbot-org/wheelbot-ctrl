@@ -11,7 +11,7 @@
 class SensorManager {
 public:
     SensorManager();
-    void begin(float shunt = 0.1, uint8_t mpuAddr = 0x68, uint8_t inaAddr = 0x40);
+    void begin(float shunt = 0.1, float maxCurrent = 0.8, uint8_t mpuAddr = 0x68, uint8_t inaAddr = 0x40);
     void update();
     void calibrateMPU();
 

@@ -17,7 +17,7 @@ SensorManager::SensorManager() :
     _energy = 0.0;
 }
 
-void SensorManager::begin(float shunt, uint8_t mpuAddr, uint8_t inaAddr) {
+void SensorManager::begin(float shunt, float maxCurrent, uint8_t mpuAddr, uint8_t inaAddr) {
     _mpuAddress = mpuAddr;
     _ina226Address = inaAddr;
 
@@ -36,8 +36,18 @@ void SensorManager::begin(float shunt, uint8_t mpuAddr, uint8_t inaAddr) {
     if (!_ina226.begin()) {
         LOG_E("INA226 not found at address 0x%X\n", _ina226Address);
     } else {
-        _ina226.setMaxCurrentShunt(3.0, shunt);
-        LOG_I("INA226 initialized with shunt %.2f Ohm.\n", shunt);
+        _ina226.setMaxCurrentShunt(maxCurrent, shunt);
+        _ina226.setModeShuntBusContinuous();
+        _ina226.setBusVoltageConversionTime(INA226_1100_us);
+        _ina226.setShuntVoltageConversionTime(INA226_1100_us);
+        _ina226.setAverage(INA226_4_SAMPLES);
+
+        LOG_I("INA226 initialized:\n");
+        LOG_I("  Shunt: %.2f Ohm\n", shunt);
+        LOG_I("  Max Current: %.2f A\n", maxCurrent);
+        LOG_I("  Mode: %d (continuous)\n", _ina226.getMode());
+        LOG_I("  Calibrated: %s\n", _ina226.isCalibrated() ? "yes" : "no");
+        LOG_I("  Max Measurable: %.2f A\n", _ina226.getMaxCurrent());
     }
 }
 

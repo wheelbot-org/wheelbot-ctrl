@@ -40,8 +40,9 @@ void setup() {
    }
    EEPROM.end();
 
-    // Load I2C addresses and shunt resistance from config
+    // Load I2C addresses, shunt resistance and max current from config
     float shunt_resistance = 0.1;
+    float max_current = 0.8;
     uint8_t mpu_address = 0x68;
     uint8_t ina226_address = 0x40;
     if (LittleFS.begin()) {
@@ -51,6 +52,7 @@ void setup() {
             deserializeJson(doc, configFile);
             configFile.close();
             shunt_resistance = doc["shunt_resistance"] | 0.1;
+            max_current = doc["max_current"] | 0.8;
             mpu_address = (uint8_t)strtol(doc["mpu_address"] | "0x68", NULL, 0);
             ina226_address = (uint8_t)strtol(doc["ina226_address"] | "0x40", NULL, 0);
         }
@@ -62,8 +64,8 @@ void setup() {
     steering.begin();
     LOG_I("Steering Initialized.\n");
 
-    sensorManager.begin(shunt_resistance, mpu_address, ina226_address);
-    LOG_I("Sensor Manager Initialized with shunt %.2f Ohm, MPU@0x%02X, INA226@0x%02X.\n", shunt_resistance, mpu_address, ina226_address);
+    sensorManager.begin(shunt_resistance, max_current, mpu_address, ina226_address);
+    LOG_I("Sensor Manager Initialized with shunt %.2f Ohm, max current %.2f A, MPU@0x%02X, INA226@0x%02X.\n", shunt_resistance, max_current, mpu_address, ina226_address);
 
   Communication::setup(&motorController, &sensorManager, &steering);
   LOG_I("Communication Initialized.\n");
@@ -80,6 +82,7 @@ void setup() {
              ssid = doc["ssid"] | "";
              password = doc["password"] | "";
              shunt_resistance = doc["shunt_resistance"] | 0.1;
+             max_current = doc["max_current"] | 0.8;
              mpu_address = (uint8_t)strtol(doc["mpu_address"] | "0x68", NULL, 0);
              ina226_address = (uint8_t)strtol(doc["ina226_address"] | "0x40", NULL, 0);
          }

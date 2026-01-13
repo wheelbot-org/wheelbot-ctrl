@@ -254,6 +254,7 @@ void WiFiPortal::handle_root() {
     String password = "";
     String ssid = "";
     String shunt_resistance = "0.1";
+    String max_current = "0.8";
     String mpu_address = "0x68";
     String ina226_address = "0x40";
 
@@ -267,6 +268,7 @@ void WiFiPortal::handle_root() {
         password = doc["password"] | "";
         ssid = doc["ssid"] | "";
         shunt_resistance = String(doc["shunt_resistance"] | 0.1);
+        max_current = String(doc["max_current"] | 0.8);
         mpu_address = doc["mpu_address"] | "0x68";
         ina226_address = doc["ina226_address"] | "0x40";
     }
@@ -289,6 +291,7 @@ void WiFiPortal::handle_root() {
     portalContent.replace("{server_port_val}", server_port);
     portalContent.replace("{device_id_val}", device_id);
     portalContent.replace("{shunt_resistance_val}", shunt_resistance);
+    portalContent.replace("{max_current_val}", max_current);
     portalContent.replace("{mpu_address_val}", mpu_address);
     portalContent.replace("{ina226_address_val}", ina226_address);
 
@@ -313,6 +316,7 @@ void WiFiPortal::handle_save() {
     String server_port = _server.arg("server_port");
     String device_id = _server.arg("device_id");
     String shunt_resistance_str = _server.arg("shunt_resistance");
+    String max_current_str = _server.arg("max_current");
     String mpu_address_str = _server.arg("mpu_address");
     String ina226_address_str = _server.arg("ina226_address");
 
@@ -376,6 +380,23 @@ void WiFiPortal::handle_save() {
         return;
     }
 
+    // Validate max current
+    float max_current = max_current_str.toFloat();
+    float max_allowed = 0.0819 / shunt_resistance;
+    if (max_current < 0.01) {
+        LOG_I("Error: Max current too low");
+        send_error_page("Max current must be at least 0.01 A.");
+        return;
+    }
+    if (max_current > max_allowed) {
+        LOG_I("Error: Max current exceeds maximum");
+        char error_msg[200];
+        sprintf(error_msg, "Max current too high. For shunt %.2f Ohm, maximum is %.2f A.",
+                shunt_resistance, max_allowed);
+        send_error_page(String(error_msg));
+        return;
+    }
+
     if (!isValidI2CAddress(mpu_address_str)) {
         LOG_I("Error: Invalid MPU address");
         send_error_page("Invalid MPU6050 I2C address. Please enter a valid hex address (e.g., 0x68) in range 0x03-0x77.");
@@ -396,6 +417,7 @@ void WiFiPortal::handle_save() {
     doc["server_port"] = server_port;
     doc["device_id"] = device_id;
     doc["shunt_resistance"] = shunt_resistance;
+    doc["max_current"] = max_current;
     doc["mpu_address"] = mpu_address_str;
     doc["ina226_address"] = ina226_address_str;
 

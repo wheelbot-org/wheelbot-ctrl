@@ -39,14 +39,23 @@
             <label for="device_id">Device ID</label>
             <input type="text" id="device_id" name="device_id" value="{device_id_val}">
 
+            <hr>
+
             <label for="shunt_resistance">Shunt Resistance (Ohm)</label>
             <input type="number" step="0.01" id="shunt_resistance" name="shunt_resistance" placeholder="0.1" value="{shunt_resistance_val}">
 
-            <label for="mpu_address">MPU6050 I2C Address (hex, e.g., 0x68)</label>
-            <input type="text" id="mpu_address" name="mpu_address" placeholder="0x68" value="{mpu_address_val}">
+            <label for="max_current">Max Current (A)</label>
+            <input type="number" step="0.01" id="max_current" name="max_current" placeholder="0.8" min="0.01" value="{max_current_val}">
+            <small id="max_current_hint"></small>
 
             <label for="ina226_address">INA226 I2C Address (hex, e.g., 0x40)</label>
             <input type="text" id="ina226_address" name="ina226_address" placeholder="0x40" value="{ina226_address_val}">
+
+            <hr>
+            <label for="mpu_address">MPU6050 I2C Address (hex, e.g., 0x68)</label>
+            <input type="text" id="mpu_address" name="mpu_address" placeholder="0x68" value="{mpu_address_val}">
+
+            <hr>
 
             <button type="submit">Save & Connect</button>
         </form>
