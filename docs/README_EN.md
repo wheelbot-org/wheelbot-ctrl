@@ -10,13 +10,6 @@ Wheelbot.org is a $30 wheeled robot with an open architecture for research into 
 - **Actuators**: Two DC motors with PWM for speed control and servo for steering.
 - **Connectivity**: MQTT over Wi-Fi for telemetry and commands.
 - **Setup**: Easy WiFi configuration via captive portal.
-- **Autonomy**: Basic sensor fusion for navigation (e.g., obstacle avoidance).
-
-### Architecture
-- **Microcontroller**: ESP8266 (NodeMCU v2).
-- **Framework**: Arduino via PlatformIO.
-- **Modules**: Modular design with MotorController, SensorManager, Steering, Communication, and WiFiPortal.
-- **Data Flow**: Sensors publish JSON to MQTT; commands update motors/steering.
 
 ## Installation
 1. Install [PlatformIO](https://platformio.org/) (or VS Code with PlatformIO extension).
