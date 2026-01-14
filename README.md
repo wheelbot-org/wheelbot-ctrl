@@ -14,8 +14,8 @@ Wheelbot.org is a $30 wheeled robot with an open architecture for research into 
 
 This project is dual-licensed:
 
-- **Non-Commercial License** — free for personal, educational, and research use
-- **Commercial License** — required for any commercial use
+- [**Non-Commercial License**](./docs/LICENSE-NC) — free for personal, educational, and research use
+- [**Commercial License**](./docs/LICENSE-COMMERCIAL) — required for any commercial use
 
 You may use this software under the terms of the Non-Commercial License,
 or obtain a Commercial License by contacting: <iliya@bykonya.com>
