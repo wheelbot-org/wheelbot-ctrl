@@ -40,6 +40,10 @@ private:
     unsigned long _last_update;
     bool _left_forward;
     bool _right_forward;
+    bool _target_left_forward;
+    bool _target_right_forward;
+    bool _left_direction_change_pending;
+    bool _right_direction_change_pending;
 };
 
 #endif // MOTOR_CONTROLLER_H

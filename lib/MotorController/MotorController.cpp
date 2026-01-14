@@ -17,6 +17,10 @@ MotorController::MotorController(int left_pwm_pin, int left_dir_pin, int right_p
     _last_update = 0;
     _left_forward = true;
     _right_forward = true;
+    _target_left_forward = true;
+    _target_right_forward = true;
+    _left_direction_change_pending = false;
+    _right_direction_change_pending = false;
 }
 
 void MotorController::begin() {
@@ -46,24 +50,16 @@ void MotorController::setRightDirection(bool forward) {
 
 void MotorController::setLeftSpeedPercent(int percent) {
     percent = constrain(percent, -100, 100);
-    if (percent >= 0) {
-        setLeftDirection(true);
-        _target_left_speed = map(percent, 0, 100, 0, 255);
-    } else {
-        setLeftDirection(false);
-        _target_left_speed = map(abs(percent), 0, 100, 0, 255);
-    }
+    _target_left_forward = (percent >= 0);
+    _target_left_speed = map(abs(percent), 0, 100, 0, 255);
+    _left_direction_change_pending = (_left_forward != _target_left_forward);
 }
 
 void MotorController::setRightSpeedPercent(int percent) {
     percent = constrain(percent, -100, 100);
-    if (percent >= 0) {
-        setRightDirection(true);
-        _target_right_speed = map(percent, 0, 100, 0, 255);
-    } else {
-        setRightDirection(false);
-        _target_right_speed = map(abs(percent), 0, 100, 0, 255);
-    }
+    _target_right_forward = (percent >= 0);
+    _target_right_speed = map(abs(percent), 0, 100, 0, 255);
+    _right_direction_change_pending = (_right_forward != _target_right_forward);
 }
 
 void MotorController::setLeftAcceleration(int acceleration) {
@@ -76,21 +72,41 @@ void MotorController::setRightAcceleration(int acceleration) {
 
 void MotorController::update() {
     unsigned long now = millis();
-    if (now - _last_update > MOTOR_UPDATE_INTERVAL) { // Update every MOTOR_UPDATE_INTERVAL ms
+    if (now - _last_update > MOTOR_UPDATE_INTERVAL) {
         _last_update = now;
 
         // Left motor
-        if (_current_left_speed < _target_left_speed) {
-            _current_left_speed = min(_current_left_speed + _left_acceleration, _target_left_speed);
-        } else if (_current_left_speed > _target_left_speed) {
-            _current_left_speed = max(_current_left_speed - _left_acceleration, _target_left_speed);
+        if (_left_direction_change_pending) {
+            if (_current_left_speed > 0) {
+                _current_left_speed = max(_current_left_speed - _left_acceleration, 0);
+            } else {
+                _left_forward = _target_left_forward;
+                digitalWrite(_left_dir_pin, _left_forward ? HIGH : LOW);
+                _left_direction_change_pending = false;
+            }
+        } else {
+            if (_current_left_speed < _target_left_speed) {
+                _current_left_speed = min(_current_left_speed + _left_acceleration, _target_left_speed);
+            } else if (_current_left_speed > _target_left_speed) {
+                _current_left_speed = max(_current_left_speed - _left_acceleration, _target_left_speed);
+            }
         }
 
         // Right motor
-        if (_current_right_speed < _target_right_speed) {
-            _current_right_speed = min(_current_right_speed + _right_acceleration, _target_right_speed);
-        } else if (_current_right_speed > _target_right_speed) {
-            _current_right_speed = max(_current_right_speed - _right_acceleration, _target_right_speed);
+        if (_right_direction_change_pending) {
+            if (_current_right_speed > 0) {
+                _current_right_speed = max(_current_right_speed - _right_acceleration, 0);
+            } else {
+                _right_forward = _target_right_forward;
+                digitalWrite(_right_dir_pin, _right_forward ? HIGH : LOW);
+                _right_direction_change_pending = false;
+            }
+        } else {
+            if (_current_right_speed < _target_right_speed) {
+                _current_right_speed = min(_current_right_speed + _right_acceleration, _target_right_speed);
+            } else if (_current_right_speed > _target_right_speed) {
+                _current_right_speed = max(_current_right_speed - _right_acceleration, _target_right_speed);
+            }
         }
 
         analogWrite(_left_pwm_pin, _current_left_speed);
