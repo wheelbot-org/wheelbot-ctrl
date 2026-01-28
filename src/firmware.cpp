@@ -123,6 +123,10 @@ void setup() {
 
 long last_publish = 0;
 
+//float getRandomFloat(float min, float max) {
+//  return min + (max - min) * (random(0, 2147483647) / 2147483647.0f);
+// }
+
 void publishParameters() {
   long now = millis();
   if (!Communication::isConnected() || !(now - last_publish > PUB_DELAY)) {
@@ -131,7 +135,7 @@ void publishParameters() {
   last_publish = now;
 
   JsonDocument sensors;
-  
+
   JsonObject sonarsNode = sensors["sonars"].to<JsonObject>();
   sonarsNode["right"] = sensorManager.getSonarRight();
   sonarsNode["left"] = sensorManager.getSonarLeft();
@@ -146,16 +150,16 @@ void publishParameters() {
   gyroscopeNode["y"] = sensorManager.getGyroY();
   gyroscopeNode["z"] = sensorManager.getGyroZ();
 
-   JsonObject anglesNode = sensors["angles"].to<JsonObject>();
-   anglesNode["yaw"] = sensorManager.getYaw();
-   anglesNode["pitch"] = sensorManager.getPitch();
-   anglesNode["roll"] = sensorManager.getRoll();
+  JsonObject anglesNode = sensors["angles"].to<JsonObject>();
+  anglesNode["yaw"] = sensorManager.getYaw();
+  anglesNode["pitch"] = sensorManager.getPitch();
+  anglesNode["roll"] = sensorManager.getRoll();
 
-   JsonObject powerNode = sensors["power"].to<JsonObject>();
-   powerNode["voltage"] = sensorManager.getVoltage();
-   powerNode["current"] = sensorManager.getCurrent();
-   powerNode["power"] = sensorManager.getPower();
-   powerNode["energy"] = sensorManager.getEnergy();
+  JsonObject powerNode = sensors["power"].to<JsonObject>();
+  powerNode["voltage"] = sensorManager.getVoltage();
+  powerNode["current"] = sensorManager.getCurrent();
+  powerNode["power"] = sensorManager.getPower();
+  powerNode["energy"] = sensorManager.getEnergy();
 
   String sensors_output;
   serializeJson(sensors, sensors_output);

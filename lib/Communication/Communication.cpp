@@ -146,6 +146,7 @@ void setup(MotorController* motorController, SensorManager* sensorManager, Steer
     LOG_I("Creating MQTT client...\n");
     client = new EspMQTTClient(wifi_ssid.c_str(), wifi_pass.c_str(), mqtt_server.c_str(), device_id.c_str(), atoi(mqtt_port_str.c_str()));
 
+    client->setMaxPacketSize(512);
     client->enableMQTTPersistence();
     client->setOnConnectionEstablishedCallback(onConnectionEstablished);
 
